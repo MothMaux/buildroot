@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-WLROOTS_VERSION = 0.19.2
+WLROOTS_VERSION = 0.15.1
 WLROOTS_SITE = https://gitlab.freedesktop.org/wlroots/wlroots/-/releases/$(WLROOTS_VERSION)/downloads
 WLROOTS_LICENSE = MIT
 WLROOTS_LICENSE_FILES = LICENSE
@@ -13,13 +13,10 @@ WLROOTS_INSTALL_STAGING = YES
 WLROOTS_DEPENDENCIES = \
 	host-pkgconf \
 	host-wayland \
-	hwdata \
-	libdisplay-info \
 	libinput \
 	libxkbcommon \
 	libegl \
 	libgles \
-	libgbm \
 	pixman \
 	seatd \
 	udev \
@@ -43,9 +40,9 @@ else
 WLROOTS_CONF_OPTS += -Dxwayland=disabled
 endif
 
-ifeq ($(BR2_PACKAGE_MESA3D_VULKAN_DRIVER)$(BR2_PACKAGE_VULKAN_LOADER),yy)
+ifeq ($(BR2_PACKAGE_MESA3D_VULKAN_DRIVER),y)
 WLROOTS_RENDERERS += vulkan
-WLROOTS_DEPENDENCIES += mesa3d vulkan-loader
+WLROOTS_DEPENDENCIES += mesa3d
 endif
 
 WLROOTS_CONF_OPTS += \

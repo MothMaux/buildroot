@@ -2,10 +2,8 @@
 Description=Starts Psplash Boot screen
 DefaultDependencies=no
 RequiresMountsFor=/run
-Before=sysinit.target
 
 [Service]
-Type=exec
 ExecStart=/usr/bin/psplash -n
 
 [Install]

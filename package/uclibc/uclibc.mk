@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-UCLIBC_VERSION = 1.0.56
+UCLIBC_VERSION = 1.0.44
 UCLIBC_SOURCE = uClibc-ng-$(UCLIBC_VERSION).tar.xz
 UCLIBC_SITE = https://downloads.uclibc-ng.org/releases/$(UCLIBC_VERSION)
 UCLIBC_LICENSE = LGPL-2.1+
@@ -57,27 +57,20 @@ UCLIBC_LOCALES = \
 endif
 
 # noMMU binary formats
-ifeq ($(BR2_BINFMT_FDPIC),y)
-define UCLIBC_BINFMT_CONFIG
-	$(call KCONFIG_DISABLE_OPT,UCLIBC_FORMAT_FLAT,$(@D)/.config)
-	$(call KCONFIG_DISABLE_OPT,UCLIBC_FORMAT_FLAT_SEP_DATA,$(@D)/.config)
-	$(call KCONFIG_ENABLE_OPT,UCLIBC_FORMAT_FDPIC_ELF,$(@D)/.config)
-endef
-endif
-ifeq ($(BR2_BINFMT_FLAT),y)
+ifeq ($(BR2_BINFMT_FLAT_ONE),y)
 define UCLIBC_BINFMT_CONFIG
 	$(call KCONFIG_ENABLE_OPT,UCLIBC_FORMAT_FLAT)
 	$(call KCONFIG_DISABLE_OPT,UCLIBC_FORMAT_FLAT_SEP_DATA)
+	$(call KCONFIG_DISABLE_OPT,UCLIBC_FORMAT_SHARED_FLAT)
 	$(call KCONFIG_DISABLE_OPT,UCLIBC_FORMAT_FDPIC_ELF)
 endef
 endif
-
-#
-# 64-bit time_t is enabled by default but needs headers >= 5.1.0
-#
-ifeq ($(BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_1),)
-define UCLIBC_DISABLE_TIME64
-	$(call KCONFIG_DISABLE_OPT,UCLIBC_USE_TIME64)
+ifeq ($(BR2_BINFMT_FLAT_SHARED),y)
+define UCLIBC_BINFMT_CONFIG
+	$(call KCONFIG_DISABLE_OPT,UCLIBC_FORMAT_FLAT)
+	$(call KCONFIG_DISABLE_OPT,UCLIBC_FORMAT_FLAT_SEP_DATA)
+	$(call KCONFIG_ENABLE_OPT,UCLIBC_FORMAT_SHARED_FLAT)
+	$(call KCONFIG_DISABLE_OPT,UCLIBC_FORMAT_FDPIC_ELF)
 endef
 endif
 
@@ -147,7 +140,7 @@ endif # arm
 ifeq ($(UCLIBC_TARGET_ARCH),m68k)
 
 # disable DOPIC for flat without separate data
-ifeq ($(BR2_BINFMT_FLAT),y)
+ifeq ($(BR2_BINFMT_FLAT_ONE),y)
 define UCLIBC_M68K_BINFMT_FLAT
 	$(call KCONFIG_DISABLE_OPT,DOPIC)
 endef
@@ -407,7 +400,6 @@ define UCLIBC_KCONFIG_FIXUP_CMDS
 	$(call KCONFIG_DISABLE_OPT,DOSTRIP)
 	$(UCLIBC_MMU_CONFIG)
 	$(UCLIBC_BINFMT_CONFIG)
-	$(UCLIBC_DISABLE_TIME64)
 	$(UCLIBC_AARCH64_PAGE_SIZE_CONFIG)
 	$(UCLIBC_ARC_PAGE_SIZE_CONFIG)
 	$(UCLIBC_ARC_ATOMICS_CONFIG)
@@ -449,14 +441,6 @@ define UCLIBC_INSTALL_UTILS_TARGET
 		PREFIX=$(TARGET_DIR) \
 		utils install_utils
 endef
-
-define UCLIBC_INSTALL_UTILS_STAGING
-	$(MAKE1) -C $(@D) \
-		CC="$(TARGET_CC)" CPP="$(TARGET_CPP)" LD="$(TARGET_LD)" \
-		ARCH="$(UCLIBC_TARGET_ARCH)" \
-		PREFIX=$(STAGING_DIR) \
-		utils install_utils
-endef
 endif
 
 define UCLIBC_INSTALL_TARGET_CMDS
@@ -471,7 +455,7 @@ endef
 
 # STATIC has no ld* tools, only getconf
 ifeq ($(BR2_STATIC_LIBS),)
-define UCLIBC_INSTALL_HOST_UTILS
+define UCLIBC_INSTALL_UTILS_STAGING
 	$(INSTALL) -D -m 0755 $(@D)/utils/ldd.host $(HOST_DIR)/bin/ldd
 	ln -sf ldd $(HOST_DIR)/bin/$(GNU_TARGET_NAME)-ldd
 	$(INSTALL) -D -m 0755 $(@D)/utils/ldconfig.host $(HOST_DIR)/bin/ldconfig
@@ -486,7 +470,6 @@ define UCLIBC_INSTALL_STAGING_CMDS
 		DEVEL_PREFIX=/usr/ \
 		RUNTIME_PREFIX=/ \
 		install_runtime install_dev
-	$(UCLIBC_INSTALL_HOST_UTILS)
 	$(UCLIBC_INSTALL_UTILS_STAGING)
 endef
 

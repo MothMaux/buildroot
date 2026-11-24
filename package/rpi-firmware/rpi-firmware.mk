@@ -4,8 +4,7 @@
 #
 ################################################################################
 
-# Please keep in sync with configs/raspberrypi*_deconfig
-RPI_FIRMWARE_VERSION = 063bcab6c8a90efb0d19f69d88cbbc7ec79cab68
+RPI_FIRMWARE_VERSION = 3f20b832b27cd730deb6419b570f31a98167eef6
 RPI_FIRMWARE_SITE = $(call github,raspberrypi,firmware,$(RPI_FIRMWARE_VERSION))
 RPI_FIRMWARE_LICENSE = BSD-3-Clause
 RPI_FIRMWARE_LICENSE_FILES = boot/LICENCE.broadcom
@@ -60,14 +59,33 @@ define RPI_FIRMWARE_INSTALL_DTB_OVERLAYS
 	$(INSTALL) -D -m 0644 $(@D)/boot/overlays/overlay_map.dtb $(BINARIES_DIR)/rpi-firmware/overlays/
 	touch $(BINARIES_DIR)/rpi-firmware/overlays/README
 endef
+else
+# Still create the directory, so a genimage.cfg can include it independently of
+# whether _INSTALL_DTB_OVERLAYS is selected or not.
+define RPI_FIRMWARE_INSTALL_DTB_OVERLAYS
+	$(INSTALL) -d $(BINARIES_DIR)/rpi-firmware/overlays
+endef
 endif
 
-RPI_FIRMWARE_EXTRA_FILES = $(call qstrip,$(BR2_PACKAGE_RPI_FIRMWARE_EXTRA_FILES))
-define RPI_FIRMWARE_INSTALL_EXTRA_FILES
-	$(foreach f,$(RPI_FIRMWARE_EXTRA_FILES), \
-		$(INSTALL) -D -m 0644 $(f) $(BINARIES_DIR)/rpi-firmware/$(notdir $(f))
-	)
+# Install prebuilt libraries if RPI_USERLAND not enabled
+ifneq ($(BR2_PACKAGE_RPI_USERLAND),y)
+define RPI_FIRMWARE_INSTALL_TARGET_LIB
+	$(INSTALL) -D -m 0644 $(@D)/$(if BR2_ARM_EABIHF,hardfp/)opt/vc/lib/libvcos.so \
+		$(TARGET_DIR)/usr/lib/libvcos.so
+	$(INSTALL) -D -m 0644 $(@D)/$(if BR2_ARM_EABIHF,hardfp/)opt/vc/lib/libdebug_sym.so \
+		$(TARGET_DIR)/usr/lib/libdebug_sym.so
 endef
+endif
+
+ifeq ($(BR2_PACKAGE_RPI_FIRMWARE_INSTALL_VCDBG),y)
+define RPI_FIRMWARE_INSTALL_TARGET_CMDS
+	$(INSTALL) -D -m 0700 $(@D)/$(if BR2_ARM_EABIHF,hardfp/)opt/vc/bin/vcdbg \
+		$(TARGET_DIR)/usr/sbin/vcdbg
+	$(INSTALL) -D -m 0644 $(@D)/$(if BR2_ARM_EABIHF,hardfp/)opt/vc/lib/libelftoolchain.so \
+		$(TARGET_DIR)/usr/lib/libelftoolchain.so
+	$(RPI_FIRMWARE_INSTALL_TARGET_LIB)
+endef
+endif # INSTALL_VCDBG
 
 define RPI_FIRMWARE_INSTALL_IMAGES_CMDS
 	$(RPI_FIRMWARE_INSTALL_BIN)
@@ -75,7 +93,6 @@ define RPI_FIRMWARE_INSTALL_IMAGES_CMDS
 	$(RPI_FIRMWARE_INSTALL_CMDLINE)
 	$(RPI_FIRMWARE_INSTALL_DTB)
 	$(RPI_FIRMWARE_INSTALL_DTB_OVERLAYS)
-	$(RPI_FIRMWARE_INSTALL_EXTRA_FILES)
 endef
 
 $(eval $(generic-package))

@@ -4,15 +4,13 @@
 #
 ################################################################################
 
-RSYNC_VERSION = 3.4.1
+RSYNC_VERSION = 3.2.7
 RSYNC_SITE = https://rsync.samba.org/ftp/rsync/src
 RSYNC_LICENSE = GPL-3.0+ with exceptions
 RSYNC_LICENSE_FILES = COPYING
 RSYNC_CPE_ID_VENDOR = samba
 RSYNC_SELINUX_MODULES = rsync
-# We're patching configure.ac
-RSYNC_AUTORECONF = YES
-RSYNC_DEPENDENCIES = host-pkgconf zlib popt
+RSYNC_DEPENDENCIES = zlib popt
 # We know that our C library is modern enough for C99 vsnprintf(). Since
 # configure can't detect this, we tell configure that vsnprintf() is safe.
 RSYNC_CONF_ENV = rsync_cv_HAVE_C99_VSNPRINTF=yes
@@ -22,11 +20,9 @@ RSYNC_CONF_OPTS = \
 	--disable-roll-simd \
 	--disable-md5-asm
 
-# reconfigure must be run after autoreconf
-define RSYNC_RUN_RECONFIGURE
-	cd $(@D) && PATH=$(BR_PATH) make reconfigure
-endef
-RSYNC_POST_CONFIGURE_HOOKS += RSYNC_RUN_RECONFIGURE
+ifeq ($(BR2_TOOLCHAIN_HAS_LIBATOMIC),y)
+RSYNC_CONF_ENV += LIBS=-latomic
+endif
 
 ifeq ($(BR2_PACKAGE_ACL),y)
 RSYNC_DEPENDENCIES += acl

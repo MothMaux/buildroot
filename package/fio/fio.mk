@@ -4,32 +4,17 @@
 #
 ################################################################################
 
-FIO_VERSION = 3.41
-FIO_SITE = https://brick.kernel.dk/snaps
+FIO_VERSION = 3.28
+FIO_SITE = http://brick.kernel.dk/snaps
 FIO_LICENSE = GPL-2.0
 FIO_LICENSE_FILES = COPYING MORAL-LICENSE
-
-FIO_OPTS = --disable-native --cc="$(TARGET_CC)" --extra-cflags="$(TARGET_CFLAGS)"
-
-# Uses __atomic_load_8
-ifeq ($(BR2_TOOLCHAIN_HAS_LIBATOMIC),y)
-FIO_CONF_ENV += LIBS=-latomic
-endif
 
 ifeq ($(BR2_PACKAGE_LIBAIO),y)
 FIO_DEPENDENCIES += libaio
 endif
 
 ifeq ($(BR2_PACKAGE_LIBNFS),y)
-FIO_OPTS += --enable-libnfs
-FIO_DEPENDENCIES += host-pkgconf libnfs
-else
-FIO_OPTS += --disable-libnfs
-endif
-
-ifeq ($(BR2_PACKAGE_LIBISCSI),y)
-FIO_OPTS += --enable-libiscsi
-FIO_DEPENDENCIES += host-pkgconf libiscsi
+FIO_DEPENDENCIES += libnfs
 endif
 
 ifeq ($(BR2_PACKAGE_NUMACTL),y)
@@ -41,7 +26,8 @@ FIO_DEPENDENCIES += zlib
 endif
 
 define FIO_CONFIGURE_CMDS
-	(cd $(@D); $(TARGET_MAKE_ENV) $(FIO_CONF_ENV) ./configure $(FIO_OPTS))
+	(cd $(@D); $(TARGET_MAKE_ENV) ./configure --disable-native \
+		--cc="$(TARGET_CC)" --extra-cflags="$(TARGET_CFLAGS)")
 endef
 
 define FIO_BUILD_CMDS

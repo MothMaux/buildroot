@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-KMOD_VERSION = 33
+KMOD_VERSION = 30
 KMOD_SOURCE = kmod-$(KMOD_VERSION).tar.xz
 KMOD_SITE = $(BR2_KERNEL_MIRROR)/linux/utils/kernel/kmod
 KMOD_INSTALL_STAGING = YES
@@ -62,30 +62,27 @@ else
 KMOD_CONF_OPTS += --without-openssl
 endif
 
+ifeq ($(BR2_PACKAGE_PYTHON3),y)
+KMOD_DEPENDENCIES += python3
+KMOD_CONF_OPTS += --enable-python
+endif
+
 ifeq ($(BR2_PACKAGE_KMOD_TOOLS),y)
 
 # add license info for kmod tools
 KMOD_LICENSE += , GPL-2.0+ (tools)
 KMOD_LICENSE_FILES += COPYING
 
-# /sbin is really /usr/sbin with merged /usr, and /usr/sbin is
-# really /usr/bin with merged-bin, so adjust relative symlink
+# /sbin is really /usr/sbin with merged /usr, so adjust relative symlink
 ifeq ($(BR2_ROOTFS_MERGED_USR),y)
-ifeq ($(BR2_ROOTFS_MERGED_BIN),y)
-KMOD_BIN_PATH = kmod
-KMOD_SBIN_DIR = bin
-else
 KMOD_BIN_PATH = ../bin/kmod
-KMOD_SBIN_DIR = sbin
-endif
 else
 KMOD_BIN_PATH = ../usr/bin/kmod
-KMOD_SBIN_DIR = sbin
 endif
 
 define KMOD_INSTALL_TOOLS
 	for i in depmod insmod lsmod modinfo modprobe rmmod; do \
-		ln -sf $(KMOD_BIN_PATH) $(TARGET_DIR)/$(KMOD_SBIN_DIR)/$$i; \
+		ln -sf $(KMOD_BIN_PATH) $(TARGET_DIR)/sbin/$$i; \
 	done
 endef
 

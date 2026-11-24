@@ -11,12 +11,6 @@ config BR2_PACKAGE_PPPD
 
 if BR2_PACKAGE_PPPD
 
-config BR2_PACKAGE_PPPD_CBCP
-	bool "CBCP (Callback Control Protocol)"
-	help
-	  Enable Callback Control Protocol (CBCP) support in pppd.
-	  https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cbcp/.
-
 config BR2_PACKAGE_PPPD_FILTER
 	bool "filtering"
 	select BR2_PACKAGE_LIBPCAP
@@ -24,6 +18,23 @@ config BR2_PACKAGE_PPPD_FILTER
 	  Packet filtering abilities for pppd. If enabled,
 	  the pppd active-filter and pass-filter options
 	  are available.
+
+config BR2_PACKAGE_PPPD_RADIUS
+	bool "radius"
+	help
+	  Install RADIUS support for pppd
+
+config BR2_PACKAGE_PPPD_OVERWRITE_RESOLV_CONF
+	bool "overwrite /etc/resolv.conf"
+	default y
+	help
+	  Overwrite /etc/resolv.conf instead of maintaining the
+	  separate list of nameservers in /etc/ppp/resolv.conf
+
+	  Note that the pppd default of writing to /etc/ppp/resolv.conf
+	  does not work on a read-only rootfs unless you make it
+	  writable in your rootfs customizations (e.g. by linking it to
+	  a file in tmpfs or by mounting a writable filesystem on it).
 
 endif
 

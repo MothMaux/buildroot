@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-LIBSELINUX_VERSION = 3.9
+LIBSELINUX_VERSION = 3.3
 LIBSELINUX_SITE = https://github.com/SELinuxProject/selinux/releases/download/$(LIBSELINUX_VERSION)
 LIBSELINUX_LICENSE = Public Domain
 LIBSELINUX_LICENSE_FILES = LICENSE
@@ -31,18 +31,10 @@ LIBSELINUX_MAKE_OPTS += FTS_LDLIBS=-lfts
 endif
 
 ifeq ($(BR2_PACKAGE_PYTHON3),y)
-LIBSELINUX_DEPENDENCIES += \
-	python3 \
-	python-setuptools \
-	host-python-pip \
-	host-python-setuptools \
-	host-swig
-
-LIBSELINUX_MAKE_ENV += \
-	$(PKG_PYTHON_SETUPTOOLS_ENV)
+LIBSELINUX_DEPENDENCIES += python3 host-swig
 
 LIBSELINUX_MAKE_OPTS += \
-	$(PKG_PYTHON_SETUPTOOLS_ENV) \
+	$(PKG_PYTHON_DISTUTILS_ENV) \
 	PYTHON=python$(PYTHON3_VERSION_MAJOR)
 
 LIBSELINUX_MAKE_INSTALL_TARGETS += install-pywrap
@@ -55,6 +47,14 @@ define LIBSELINUX_BUILD_PYTHON_BINDINGS
 		$(LIBSELINUX_MAKE_OPTS) swigify pywrap
 endef
 endif # python3
+
+# Filter out D_FILE_OFFSET_BITS=64. This fixes errors caused by glibc 2.22. We
+# set CFLAGS, CPPFLAGS and LDFLAGS here because we want to win over the
+# CFLAGS/CPPFLAGS/LDFLAGS definitions passed by $(PKG_PYTHON_DISTUTILS_ENV)
+# when the python binding is enabled.
+LIBSELINUX_MAKE_OPTS += \
+	CFLAGS="$(filter-out -D_FILE_OFFSET_BITS=64,$(TARGET_CFLAGS))" \
+	CPPFLAGS="$(filter-out -D_FILE_OFFSET_BITS=64,$(TARGET_CPPFLAGS))"
 
 define LIBSELINUX_BUILD_CMDS
 	$(TARGET_MAKE_ENV) $(MAKE) -C $(@D) \
@@ -77,19 +77,13 @@ define LIBSELINUX_INSTALL_TARGET_CMDS
 endef
 
 HOST_LIBSELINUX_DEPENDENCIES = \
-	host-pkgconf \
-	host-libsepol \
-	host-pcre2 \
-	host-swig \
-	host-python3 \
-	host-python-pip \
-	host-python-setuptools
+	host-pkgconf host-libsepol host-pcre2 host-swig host-python3
 
 HOST_LIBSELINUX_MAKE_OPTS = \
 	$(HOST_CONFIGURE_OPTS) \
 	PREFIX=$(HOST_DIR) \
 	SHLIBDIR=$(HOST_DIR)/lib \
-	$(HOST_PKG_PYTHON_SETUPTOOLS_ENV) \
+	$(HOST_PKG_PYTHON_DISTUTILS_ENV) \
 	PYTHON=python$(PYTHON3_VERSION_MAJOR) \
 	USE_PCRE2=y
 

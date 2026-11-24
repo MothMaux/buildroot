@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-PHP_PECL_DBUS_VERSION = 0.4.1
+PHP_PECL_DBUS_VERSION = 315d17558c7614d02e923d898231e51c86a25789
 PHP_PECL_DBUS_SITE = $(call github,derickr,pecl-dbus,$(PHP_PECL_DBUS_VERSION))
 PHP_PECL_DBUS_LICENSE = PHP-3.01
 PHP_PECL_DBUS_LICENSE_FILES = LICENSE

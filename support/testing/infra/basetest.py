@@ -9,8 +9,14 @@ BASIC_TOOLCHAIN_CONFIG = \
     """
     BR2_arm=y
     BR2_TOOLCHAIN_EXTERNAL=y
-    BR2_TOOLCHAIN_EXTERNAL_BOOTLIN=y
-    BR2_TOOLCHAIN_EXTERNAL_BOOTLIN_ARMV5_EABI_GLIBC_STABLE=y
+    BR2_TOOLCHAIN_EXTERNAL_CUSTOM=y
+    BR2_TOOLCHAIN_EXTERNAL_DOWNLOAD=y
+    BR2_TOOLCHAIN_EXTERNAL_URL="https://toolchains.bootlin.com/downloads/releases/toolchains/armv5-eabi/tarballs/armv5-eabi--uclibc--bleeding-edge-2018.11-1.tar.bz2"
+    BR2_TOOLCHAIN_EXTERNAL_GCC_8=y
+    BR2_TOOLCHAIN_EXTERNAL_HEADERS_4_14=y
+    BR2_TOOLCHAIN_EXTERNAL_LOCALE=y
+    BR2_TOOLCHAIN_HAS_THREADS_DEBUG=y
+    BR2_TOOLCHAIN_EXTERNAL_CXX=y
     """
 
 MINIMAL_CONFIG = \
@@ -24,8 +30,8 @@ MINIMAL_CONFIG = \
 
 class BRConfigTest(unittest.TestCase):
     """Test up to the configure stage."""
-    config: str
-    br2_external: list[str] = list()
+    config = None
+    br2_external = list()
     downloaddir = None
     outputdir = None
     logtofile = True
@@ -58,28 +64,6 @@ class BRConfigTest(unittest.TestCase):
         self.show_msg("Cleaning up")
         if self.b and not self.keepbuilds:
             self.b.delete()
-
-
-class BRHostPkgTest(BRConfigTest):
-    """Test up to the build stage of a host package. Define hostpkgs in
-    the class to the list of host packages that should be built."""
-    config = \
-        BASIC_TOOLCHAIN_CONFIG + \
-        MINIMAL_CONFIG
-    hostpkgs = None
-
-    def __init__(self, names):
-        super(BRHostPkgTest, self).__init__(names)
-
-    def setUp(self):
-        super(BRHostPkgTest, self).setUp()
-        if not self.b.is_finished():
-            self.show_msg("Building")
-            self.b.build(make_extra_opts=self.hostpkgs)
-            self.show_msg("Building done")
-
-    def tearDown(self):
-        super(BRHostPkgTest, self).tearDown()
 
 
 class BRTest(BRConfigTest):

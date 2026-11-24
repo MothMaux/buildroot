@@ -96,10 +96,6 @@ copy_toolchain_lib_root = \
 # Note that the 'locale' directories are not copied. They are huge
 # (400+MB) in CodeSourcery toolchains, and they are not really useful.
 #
-# usr/sbin may be a directory in the source toolchain, but a symlink
-# in the destination sysroot, when we are using a merged-bin. Account
-# for that.
-#
 # $1: main sysroot directory of the toolchain
 # $2: arch specific sysroot directory of the toolchain
 # $3: arch specific subdirectory in the sysroot
@@ -113,13 +109,13 @@ copy_toolchain_sysroot = \
 	ARCH_SUBDIR="$(strip $3)"; \
 	ARCH_LIB_DIR="$(strip $4)" ; \
 	SUPPORT_LIB_DIR="$(strip $5)" ; \
-	for i in etc $${ARCH_LIB_DIR} sbin usr usr/$${ARCH_LIB_DIR} usr/sbin; do \
+	for i in etc $${ARCH_LIB_DIR} sbin usr usr/$${ARCH_LIB_DIR}; do \
 		if [ ! -d $${ARCH_SYSROOT_DIR}/$$i ] ; then \
 			continue ; \
 		fi ; \
 		if [ "$$i" = "usr" ]; then \
 			rsync -au --chmod=u=rwX,go=rX --exclude 'locale/' \
-				--include '/libexec*/' --exclude '/lib*/' --exclude '/sbin' \
+				--include '/libexec*/' --exclude '/lib*/' \
 				$${ARCH_SYSROOT_DIR}/$$i/ $(STAGING_DIR)/$$i/ ; \
 		else \
 			rsync -au --chmod=u=rwX,go=rX --exclude 'locale/' \
@@ -328,7 +324,7 @@ check_arm_abi = \
 	__CROSS_CC=$(strip $1) ; \
 	EXT_TOOLCHAIN_TARGET=`LANG=C $${__CROSS_CC} -v 2>&1 | grep ^Target | cut -f2 -d ' '` ; \
 	if ! echo $${EXT_TOOLCHAIN_TARGET} | grep -qE 'eabi(hf)?$$' ; then \
-		echo "External toolchain uses the unsupported OABI" ; \
+		echo "External toolchain uses the unsuported OABI" ; \
 		exit 1 ; \
 	fi ; \
 	if ! echo 'int main(void) {}' | $${__CROSS_CC} -x c -o $(BUILD_DIR)/.br-toolchain-test.tmp - ; then \
@@ -347,14 +343,11 @@ check_arm_abi = \
 #
 check_cplusplus = \
 	__CROSS_CXX=$(strip $1) ; \
-	__HAS_CXX=`$${__CROSS_CXX} -v > /dev/null 2>&1 && echo y`; \
-	if [ "$${__HAS_CXX}" != "y" -a "$(BR2_INSTALL_LIBSTDCPP)" = y ] ; then \
+	$${__CROSS_CXX} -v > /dev/null 2>&1 ; \
+	if test $$? -ne 0 ; then \
 		echo "C++ support is selected but is not available in external toolchain" ; \
 		exit 1 ; \
-	elif [ "$${__HAS_CXX}" = "y" -a "$(BR2_INSTALL_LIBSTDCPP)" != y ] ; then \
-		echo "C++ support is not selected but is available in external toolchain" ; \
-		exit 1 ; \
-	fi \
+	fi
 
 #
 #
@@ -365,16 +358,14 @@ check_cplusplus = \
 check_dlang = \
 	__CROSS_GDC=$(strip $1) ; \
 	__o=$(BUILD_DIR)/.br-toolchain-test-dlang.tmp ; \
-	__HAS_DLANG=`printf 'import std.stdio;\nvoid main() { writeln("Hello World!"); }\n' | \
-		$${__CROSS_GDC} -x d -o $${__o} - >/dev/null 2>&1 && echo y`; \
-	rm -f $${__o}* ; \
-	if [ "$${__HAS_DLANG}" != "y" -a "$(BR2_TOOLCHAIN_HAS_DLANG)" = y ] ; then \
+	printf 'import std.stdio;\nvoid main() { writeln("Hello World!"); }\n' | \
+	$${__CROSS_GDC} -x d -o $${__o} - ; \
+	if test $$? -ne 0 ; then \
+		rm -f $${__o}* ; \
 		echo "D language support is selected but is not available in external toolchain" ; \
 		exit 1 ; \
-	elif [ "$${__HAS_DLANG}" = "y" -a "$(BR2_TOOLCHAIN_HAS_DLANG)" != y ] ; then \
-		echo "D language support is not selected but is available in external toolchain" ; \
-		exit 1 ; \
-	fi \
+	fi ; \
+	rm -f $${__o}* \
 
 #
 #
@@ -385,16 +376,14 @@ check_dlang = \
 check_fortran = \
 	__CROSS_FC=$(strip $1) ; \
 	__o=$(BUILD_DIR)/.br-toolchain-test-fortran.tmp ; \
-	__HAS_FORTRAN=`printf 'program hello\n\tprint *, "Hello Fortran!\\\n"\nend program hello\n' | \
-		$${__CROSS_FC} -x f95 -ffree-form -o $${__o} - 2>/dev/null && echo y`; \
-	rm -f $${__o}* ; \
-	if [ "$${__HAS_FORTRAN}" != "y" -a "$(BR2_TOOLCHAIN_HAS_FORTRAN)" = y ] ; then \
+	printf 'program hello\n\tprint *, "Hello Fortran!\\n"\nend program hello\n' | \
+	$${__CROSS_FC} -x f95 -o $${__o} - ; \
+	if test $$? -ne 0 ; then \
+		rm -f $${__o}* ; \
 		echo "Fortran support is selected but is not available in external toolchain" ; \
 		exit 1 ; \
-	elif [ "$${__HAS_FORTRAN}" = "y" -a "$(BR2_TOOLCHAIN_HAS_FORTRAN)" != y ] ; then \
-		echo "Fortran support is not selected but is available in external toolchain" ; \
-		exit 1 ; \
-	fi \
+	fi ; \
+	rm -f $${__o}* \
 
 #
 #
@@ -405,16 +394,14 @@ check_fortran = \
 check_openmp = \
 	__CROSS_CC=$(strip $1) ; \
 	__o=$(BUILD_DIR)/.br-toolchain-test-openmp.tmp ; \
-	__HAS_OPENMP=`printf '\#include <omp.h>\nint main(void) { return omp_get_thread_num(); }' | \
-		$${__CROSS_CC} -fopenmp -x c -o $${__o} - >/dev/null 2>&1 && echo y` ; \
-	rm -f $${__o}* ; \
-	if [ "$${__HAS_OPENMP}" != "y" -a "$(BR2_TOOLCHAIN_HAS_OPENMP)" = y ] ; then \
+	printf '\#include <omp.h>\nint main(void) { return omp_get_thread_num(); }' | \
+	$${__CROSS_CC} -fopenmp -x c -o $${__o} - ; \
+	if test $$? -ne 0 ; then \
+		rm -f $${__o}* ; \
 		echo "OpenMP support is selected but is not available in external toolchain"; \
 		exit 1 ; \
-	elif [ "$${__HAS_OPENMP}" = "y" -a "$(BR2_TOOLCHAIN_HAS_OPENMP)" != y ] ; then \
-		echo "OpenMP support is not selected but is available in external toolchain"; \
-		exit 1 ; \
-	fi \
+	fi ; \
+	rm -f $${__o}* \
 
 #
 # Check that the cross-compiler given in the configuration exists
@@ -487,7 +474,7 @@ check_unusable_toolchain = \
 #
 check_toolchain_ssp = \
 	__CROSS_CC=$(strip $1) ; \
-	__HAS_SSP=`echo 'int main(){}' | $${__CROSS_CC} -Werror -fstack-protector -x c - -o $(BUILD_DIR)/.br-toolchain-test.tmp >/dev/null 2>&1 && echo y` ; \
+	__HAS_SSP=`echo 'void main(){}' | $${__CROSS_CC} -Werror -fstack-protector -x c - -o $(BUILD_DIR)/.br-toolchain-test.tmp >/dev/null 2>&1 && echo y` ; \
 	if [ "$(BR2_TOOLCHAIN_HAS_SSP)" != "y" -a "$${__HAS_SSP}" = "y" ] ; then \
 		echo "SSP support available in this toolchain, please enable BR2_TOOLCHAIN_EXTERNAL_HAS_SSP" ; \
 		exit 1 ; \
@@ -498,7 +485,7 @@ check_toolchain_ssp = \
 	fi ; \
 	__SSP_OPTION=$(2); \
 	if [ -n "$${__SSP_OPTION}" ] ; then \
-		if ! echo 'int main(){}' | $${__CROSS_CC} -Werror $${__SSP_OPTION} -x c - -o $(BUILD_DIR)/.br-toolchain-test.tmp >/dev/null 2>&1 ; then \
+		if ! echo 'void main(){}' | $${__CROSS_CC} -Werror $${__SSP_OPTION} -x c - -o $(BUILD_DIR)/.br-toolchain-test.tmp >/dev/null 2>&1 ; then \
 			echo "SSP option $${__SSP_OPTION} not available in this toolchain, please select another SSP level" ; \
 			exit 1 ; \
 		fi; \

@@ -4,9 +4,8 @@
 #
 ################################################################################
 
-PYTHON_IPTABLES_VERSION = 1.2.0
-PYTHON_IPTABLES_SOURCE = python_iptables-$(PYTHON_IPTABLES_VERSION).tar.gz
-PYTHON_IPTABLES_SITE = https://files.pythonhosted.org/packages/55/3c/a2626b88fffb5bcebae80a2dca1e09ff539ab454a8e5fb2e50141943a1f8
+PYTHON_IPTABLES_VERSION = 1.0.0
+PYTHON_IPTABLES_SITE = https://files.pythonhosted.org/packages/ca/6e/cba9c6f4b5a1963b7f5b015f5ed5e2eec7a94ac460570e3474177c4004d6
 PYTHON_IPTABLES_SETUP_TYPE = setuptools
 PYTHON_IPTABLES_LICENSE = Apache-2.0
 PYTHON_IPTABLES_LICENSE_FILES = NOTICE

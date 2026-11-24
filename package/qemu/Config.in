@@ -9,7 +9,6 @@ config BR2_PACKAGE_QEMU_ARCH_SUPPORTS_TARGET
 	default y if BR2_powerpc64
 	default y if BR2_powerpc64le
 	default y if BR2_riscv
-	default y if BR2_s390x
 	default y if BR2_x86_64
 
 comment "QEMU requires a toolchain with wchar, threads, gcc >= 8"
@@ -27,6 +26,7 @@ menuconfig BR2_PACKAGE_QEMU
 	depends on BR2_USE_MMU # fork()
 	select BR2_PACKAGE_LIBGLIB2
 	select BR2_PACKAGE_ZLIB
+	select BR2_PACKAGE_QEMU_TOOLS if !BR2_PACKAGE_QEMU_SYSTEM && !BR2_PACKAGE_QEMU_LINUX_USER
 	help
 	  QEMU is a generic and open source machine emulator and
 	  virtualizer.
@@ -54,37 +54,10 @@ config BR2_PACKAGE_QEMU_SYSTEM
 	depends on !BR2_STATIC_LIBS # dtc
 	select BR2_PACKAGE_PIXMAN
 	select BR2_PACKAGE_QEMU_FDT if !BR2_PACKAGE_QEMU_CHOOSE_TARGETS
-	# Make sure at least one of tcg or kvm is enabled
-	select BR2_PACKAGE_QEMU_SYSTEM_TCG if !BR2_PACKAGE_QEMU_SYSTEM_KVM
 	help
 	  Say 'y' to build system emulators/virtualisers.
 
 if BR2_PACKAGE_QEMU_SYSTEM
-
-config BR2_PACKAGE_QEMU_SYSTEM_KVM
-	bool "Enable KVM system virtualisation"
-	default y
-	help
-	  Say 'y' here to enable a QEMU with KVM support.
-	  If unsure, say 'y'
-
-config BR2_PACKAGE_QEMU_SYSTEM_TCG
-	bool "Enable TCG system emulation"
-	default y
-	help
-	  Say 'y' here to enable QEMU binaries which can emulate foreign
-	  architectures using the TCG JIT.
-
-config BR2_PACKAGE_QEMU_BLOBS
-	bool "Install binary blobs"
-	default y
-	help
-	  Say 'y' here (the default) to install binary blobs (such as
-	  BIOS or firmwares for the different machines simulated by
-	  QEMU). Say 'n' to not install those blobs.
-
-	  Note: Some machines may be unbootable without those blobs.
-	  If unsure, say 'y'.
 
 config BR2_PACKAGE_QEMU_SLIRP
 	bool "Enable user mode networking (SLIRP)"
@@ -123,15 +96,6 @@ config BR2_PACKAGE_QEMU_FDT
 	  Say 'y' here to have QEMU capable of constructing Device
 	  Trees, and passing them to the VMs.
 
-config BR2_PACKAGE_QEMU_TRACING
-	bool "Enable tracing"
-	help
-	  Say 'y' to enable the "log" tracing infrastructure in QEMU,
-	  used for debugging, profiling, and observing execution. For
-	  detailed documentation, see
-
-	  https://www.qemu.org/docs/master/devel/tracing.html
-
 endif # BR2_PACKAGE_QEMU_SYSTEM
 
 comment "systems emulation needs a toolchain w/ dynamic library"
@@ -139,18 +103,24 @@ comment "systems emulation needs a toolchain w/ dynamic library"
 
 config BR2_PACKAGE_QEMU_LINUX_USER
 	bool "Enable Linux user-land emulation"
+	# Incompatible "struct sigevent" definition on musl
+	depends on !BR2_TOOLCHAIN_USES_MUSL
 	help
 	  Say 'y' to build Linux user-land emulators.
 
 # Note: bsd-user can not be build on Linux
 
+comment "Linux user-land emulation needs a glibc or uClibc toolchain"
+	depends on BR2_TOOLCHAIN_USES_MUSL
+
 config BR2_PACKAGE_QEMU_CHOOSE_TARGETS
 	bool "Select individual emulator targets"
-	depends on BR2_PACKAGE_QEMU_SYSTEM_TCG || BR2_PACKAGE_QEMU_LINUX_USER
+	depends on BR2_PACKAGE_QEMU_SYSTEM || BR2_PACKAGE_QEMU_LINUX_USER
 	help
-	  By default, all targets system targets are built. If you
-	  only need a subset of the emulated targets, say 'y' here and
-	  enable at least one target, below.
+	  By default, all targets (system and/or user, subject to the
+	  corresponding options, above) are built. If you only need a
+	  subset of the emulated targets, say 'y' here and enable at
+	  least one target, below.
 
 if BR2_PACKAGE_QEMU_CHOOSE_TARGETS
 
@@ -189,6 +159,11 @@ config BR2_PACKAGE_QEMU_TARGET_AVR
 	help
 	  AVR 8-bit microcontroller architecture.
 
+config BR2_PACKAGE_QEMU_TARGET_CRIS
+	bool "cris"
+	help
+	  ETRAX CRIS microcontroller architecture.
+
 config BR2_PACKAGE_QEMU_TARGET_HEXAGON
 	bool "hexagon (linux-user, only)"
 	depends on BR2_PACKAGE_QEMU_LINUX_USER
@@ -221,13 +196,13 @@ config BR2_PACKAGE_QEMU_TARGET_MICROBLAZE
 	bool "microblaze"
 	select BR2_PACKAGE_QEMU_FDT if BR2_PACKAGE_QEMU_SYSTEM
 	help
-	  Xilinx MicroBlaze soft processor.
+	  Xilinix MicroBlaze soft processor.
 
 config BR2_PACKAGE_QEMU_TARGET_MICROBLAZEEL
 	bool "microblazeel"
 	select BR2_PACKAGE_QEMU_FDT if BR2_PACKAGE_QEMU_SYSTEM
 	help
-	  Xilinx MicroBlaze EL soft processor.
+	  Xilinix MicroBlaze EL soft processor.
 
 config BR2_PACKAGE_QEMU_TARGET_MIPS
 	bool "mips"
@@ -262,6 +237,11 @@ config BR2_PACKAGE_QEMU_TARGET_MIPSN32EL
 	help
 	  MIPS N32 architecture, little-endian.
 
+config BR2_PACKAGE_QEMU_TARGET_NIOS2
+	bool "nios2"
+	help
+	  Nios II architecture.
+
 config BR2_PACKAGE_QEMU_TARGET_OR1K
 	bool "or1k"
 	select BR2_PACKAGE_QEMU_FDT if BR2_PACKAGE_QEMU_SYSTEM
@@ -290,7 +270,7 @@ config BR2_PACKAGE_QEMU_TARGET_RISCV32
 	bool "riscv32"
 	select BR2_PACKAGE_QEMU_FDT if BR2_PACKAGE_QEMU_SYSTEM
 	help
-	  RISC-V 32-bit architecture.
+	  RISC-V 33-bit architecture.
 
 config BR2_PACKAGE_QEMU_TARGET_RISCV64
 	bool "riscv64"
@@ -367,12 +347,5 @@ config BR2_PACKAGE_QEMU_TOOLS
 	help
 	  Say 'y' here to include tools packaged with QEMU
 	  (e.g. qemu-img).
-
-config BR2_PACKAGE_QEMU_GUEST_AGENT
-	bool "Enable guest agent"
-	help
-	  Say 'y' here to include an agent to run on guests, which
-	  communicates with the host over a virtio-serial channel
-	  named "org.qemu.guest_agent.0".
 
 endif # BR2_PACKAGE_QEMU

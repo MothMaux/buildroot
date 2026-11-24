@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-PHP_VERSION = 8.5.3
+PHP_VERSION = 8.2.10
 PHP_SITE = https://www.php.net/distributions
 PHP_SOURCE = php-$(PHP_VERSION).tar.xz
 PHP_INSTALL_STAGING = YES
@@ -14,10 +14,6 @@ PHP_DEPENDENCIES = host-pkgconf pcre2
 PHP_LICENSE = PHP-3.01
 PHP_LICENSE_FILES = LICENSE
 PHP_CPE_ID_VENDOR = php
-
-# Only affects the Windows operating system
-PHP_IGNORE_CVES += CVE-2024-3566
-
 PHP_CONF_OPTS = \
 	--mandir=/usr/share/man \
 	--infodir=/usr/share/info \
@@ -26,11 +22,9 @@ PHP_CONF_OPTS = \
 	--with-external-pcre \
 	--without-pear \
 	--with-config-file-path=/etc \
-	--disable-opcache-jit \
 	--disable-phpdbg \
 	--disable-rpath
 PHP_CONF_ENV = \
-	ac_cv_func_mprotect=yes \
 	EXTRA_LIBS="$(PHP_EXTRA_LIBS)"
 
 ifeq ($(BR2_STATIC_LIBS),y)
@@ -43,15 +37,6 @@ endif
 
 ifeq ($(BR2_TOOLCHAIN_HAS_LIBATOMIC),y)
 PHP_EXTRA_LIBS += -latomic
-endif
-
-ifeq ($(BR2_TOOLCHAIN_USES_UCLIBC),y)
-PHP_CONF_ENV += php_cv_func_copy_file_range=no
-endif
-
-ifeq ($(BR2_PACKAGE_LIBUCONTEXT),y)
-PHP_DEPENDENCIES += libucontext
-PHP_EXTRA_LIBS += -lucontext
 endif
 
 ifeq ($(call qstrip,$(BR2_TARGET_LOCALTIME)),)
@@ -80,12 +65,16 @@ PHP_CXXFLAGS = $(TARGET_CXXFLAGS)
 
 # The OPcache extension isn't cross-compile friendly
 # Throw some defines here to avoid patching heavily
+ifeq ($(BR2_PACKAGE_PHP_EXT_OPCACHE),y)
+PHP_CONF_OPTS += --enable-opcache --disable-opcache-jit
+PHP_CONF_ENV += ac_cv_func_mprotect=yes
 PHP_CFLAGS += \
 	-DHAVE_SHM_IPC \
 	-DHAVE_SHM_MMAP_ANON \
 	-DHAVE_SHM_MMAP_ZERO \
 	-DHAVE_SHM_MMAP_POSIX \
 	-DHAVE_SHM_MMAP_FILE
+endif
 
 # We need to force dl "detection"
 ifeq ($(BR2_STATIC_LIBS),)
@@ -97,7 +86,7 @@ endif
 
 # php has some assembly function that is not present in Thumb mode:
 # Error: selected processor does not support `umlal r2,r1,r0,r3' in Thumb mode
-# so, we deactivate Thumb mode
+# so, we desactivate Thumb mode
 ifeq ($(BR2_ARM_INSTRUCTIONS_THUMB),y)
 PHP_CFLAGS += -marm
 endif
@@ -261,10 +250,10 @@ PHP_POST_CONFIGURE_HOOKS += PHP_DISABLE_VALGRIND
 
 ifeq ($(BR2_PACKAGE_PCRE2_JIT),y)
 PHP_CONF_OPTS += --with-pcre-jit=yes
-PHP_CONF_ENV += php_cv_have_pcre2_jit=yes
+PHP_CONF_ENV += ac_cv_have_pcre2_jit=yes
 else
 PHP_CONF_OPTS += --with-pcre-jit=no
-PHP_CONF_ENV += php_cv_have_pcre2_jit=no
+PHP_CONF_ENV += ac_cv_have_pcre2_jit=no
 endif
 
 ifeq ($(BR2_PACKAGE_PHP_EXT_CURL),y)
@@ -356,39 +345,13 @@ define PHP_INSTALL_FIXUP
 		$(TARGET_DIR)/etc/php.ini
 	$(SED) 's%;date.timezone =.*%date.timezone = $(PHP_LOCALTIME)%' \
 		$(TARGET_DIR)/etc/php.ini
-	$(SED) '/;extension=php_xsl.dll/azend_extension=opcache.so' \
-		$(TARGET_DIR)/etc/php.ini
+	$(if $(BR2_PACKAGE_PHP_EXT_OPCACHE),
+		$(SED) '/;extension=php_xsl.dll/azend_extension=opcache.so' \
+		$(TARGET_DIR)/etc/php.ini)
 endef
 
 PHP_POST_INSTALL_TARGET_HOOKS += PHP_INSTALL_FIXUP
 
 PHP_CONF_ENV += CFLAGS="$(PHP_CFLAGS)" CXXFLAGS="$(PHP_CXXFLAGS)"
 
-HOST_PHP_CONF_OPTS = \
-	--disable-all \
-	--without-pear \
-	--with-config-file-path=$(HOST_DIR)/etc \
-	--disable-phpdbg \
-	--with-external-pcre \
-	--enable-phar \
-	--enable-json \
-	--enable-filter \
-	--enable-mbstring \
-	--enable-tokenizer \
-	--with-openssl=$(HOST_DIR)
-
-HOST_PHP_DEPENDENCIES = \
-	host-oniguruma \
-	host-openssl \
-	host-pcre2 \
-	host-pkgconf
-
-# PHP can't be AUTORECONFed the standard way unfortunately
-HOST_PHP_DEPENDENCIES += host-autoconf host-automake host-libtool
-define HOST_PHP_BUILDCONF
-	cd $(@D) ; $(HOST_MAKE_ENV) ./buildconf --force
-endef
-HOST_PHP_PRE_CONFIGURE_HOOKS += HOST_PHP_BUILDCONF
-
 $(eval $(autotools-package))
-$(eval $(host-autotools-package))

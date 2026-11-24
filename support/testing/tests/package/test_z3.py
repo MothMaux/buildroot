@@ -4,8 +4,14 @@ import infra.basetest
 
 
 class TestZ3(infra.basetest.BRTest):
-    config = infra.basetest.BASIC_TOOLCHAIN_CONFIG + \
+    # Need to use a different toolchain than the default due to
+    # z3 requiring fenv.h not provided by uclibc.
+    config = \
         """
+        BR2_arm=y
+        BR2_TOOLCHAIN_EXTERNAL=y
+        BR2_TOOLCHAIN_EXTERNAL_BOOTLIN=y
+        BR2_TOOLCHAIN_EXTERNAL_BOOTLIN_ARMV5_EABI_GLIBC_STABLE=y
         BR2_PACKAGE_PYTHON3=y
         BR2_PACKAGE_Z3=y
         BR2_PACKAGE_Z3_PYTHON=y

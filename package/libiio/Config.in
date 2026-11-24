@@ -23,6 +23,7 @@ config BR2_PACKAGE_LIBIIO_HWMON_SUPPORT
 
 config BR2_PACKAGE_LIBIIO_LOCAL_CONFIG
 	bool "Local context attributes"
+	depends on BR2_PACKAGE_LIBINI
 	default y
 	help
 	  Read local context attributes from /etc/libiio.ini.

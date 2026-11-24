@@ -4,20 +4,18 @@
 #
 ################################################################################
 
-DRACUT_VERSION = 059
+DRACUT_VERSION = 057
 DRACUT_SITE = $(call github,dracutdevs,dracut,$(DRACUT_VERSION))
 DRACUT_LICENSE = GPL-2.0
 DRACUT_LICENSE_FILES = COPYING
-DRACUT_CPE_ID_VALID = YES
+DRACUT_CPE_ID_VENDOR = dracut_project
 
-HOST_DRACUT_DEPENDENCIES = host-pkgconf host-kmod host-cross-ldd
+HOST_DRACUT_DEPENDENCIES = host-pkgconf host-kmod host-prelink-cross
 
 define HOST_DRACUT_POST_INSTALL_WRAPPER_SCRIPT
 	mv $(HOST_DIR)/bin/dracut $(HOST_DIR)/bin/dracut.real
-	sed -e "s%@@TARGET_CROSS@@%$(TARGET_CROSS)%" \
-		$(HOST_DRACUT_PKGDIR)/dracut_wrapper.in > \
-		$(@D)/dracut_wrapper
-	install -D -m 0755 $(@D)/dracut_wrapper $(HOST_DIR)/bin/dracut
+	install -D -m 0755 $(HOST_DRACUT_PKGDIR)/dracut_wrapper \
+		$(HOST_DIR)/bin/dracut
 endef
 HOST_DRACUT_POST_INSTALL_HOOKS += HOST_DRACUT_POST_INSTALL_WRAPPER_SCRIPT
 

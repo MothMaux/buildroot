@@ -4,13 +4,12 @@
 #
 ################################################################################
 
-LIBVA_VERSION = 2.23.0
+LIBVA_VERSION = 2.17.0
 LIBVA_SITE = $(call github,intel,libva,$(LIBVA_VERSION))
 LIBVA_LICENSE = MIT
 LIBVA_LICENSE_FILES = COPYING
 LIBVA_INSTALL_STAGING = YES
 LIBVA_DEPENDENCIES = host-pkgconf libdrm
-LIBVA_CFLAGS = $(TARGET_CFLAGS) -std=gnu99
 
 # libdrm is a hard-dependency
 LIBVA_CONF_OPTS = \

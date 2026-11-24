@@ -4,11 +4,14 @@
 #
 ################################################################################
 
-SCONS_VERSION = 4.8.1
-SCONS_SITE = https://files.pythonhosted.org/packages/b9/76/a2c1293642f9a448f2d012cabf525be69ca5abf4af289bc0935ac1554ee8
+SCONS_VERSION = 3.1.2
+SCONS_SITE = http://downloads.sourceforge.net/project/scons/scons/$(SCONS_VERSION)
 SCONS_LICENSE = MIT
-SCONS_LICENSE_FILES = LICENSE
-SCONS_SETUP_TYPE = setuptools
+SCONS_LICENSE_FILES = LICENSE.txt
+SCONS_SETUP_TYPE = distutils
+
+HOST_SCONS_INSTALL_OPTS = \
+	--install-lib=$(HOST_DIR)/lib/scons-$(SCONS_VERSION)
 
 $(eval $(host-python-package))
 

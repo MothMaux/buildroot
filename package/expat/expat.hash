@@ -1,4 +1,7 @@
-# From https://github.com/libexpat/libexpat/releases/tag/R_2_7_4
-sha256  9e9cabb457c1e09de91db2706d8365645792638eb3be1f94dbb2149301086ac0  expat-2.7.4.tar.xz
+# From https://sourceforge.net/projects/expat/files/expat/2.5.0/
+md5  ac6677b6d1b95d209ab697ce8b688704  expat-2.5.0.tar.xz
+sha1  5178e13c1e34f4643d5118d5758babfe0e836fe2  expat-2.5.0.tar.xz
+
 # Locally calculated
-sha256  31b15de82aa19a845156169a17a5488bf597e561b2c318d159ed583139b25e87  COPYING
+sha256  ef2420f0232c087801abf705e89ae65f6257df6b7931d37846a193ef2e8cdcbe  expat-2.5.0.tar.xz
+sha256  122f2c27000472a201d337b9b31f7eb2b52d091b02857061a8880371612d9534  COPYING

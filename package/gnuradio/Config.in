@@ -10,6 +10,7 @@ comment "gnuradio needs a toolchain not affected by GCC bug 43744"
 
 config BR2_PACKAGE_GNURADIO
 	bool "gnuradio"
+        select BR2_PACKAGE_PYTHON3_PACKAGING
 	depends on BR2_INSTALL_LIBSTDCPP
 	depends on !BR2_STATIC_LIBS
 	depends on BR2_TOOLCHAIN_HAS_THREADS_NPTL
@@ -27,7 +28,6 @@ config BR2_PACKAGE_GNURADIO
 	select BR2_PACKAGE_BOOST_THREAD
 	select BR2_PACKAGE_LOG4CPP
 	select BR2_PACKAGE_GMP
-	select BR2_PACKAGE_PYTHON_PACKAGING
 	select BR2_PACKAGE_SPDLOG
 	select BR2_PACKAGE_VOLK
 	help
@@ -80,23 +80,16 @@ config BR2_PACKAGE_GNURADIO_PYTHON
 	depends on BR2_PACKAGE_PYTHON3
 	depends on BR2_PACKAGE_PYTHON_NUMPY_ARCH_SUPPORTS
 	depends on BR2_TOOLCHAIN_USES_GLIBC || BR2_TOOLCHAIN_USES_MUSL # python-numpy
-	depends on BR2_HOST_GCC_AT_LEAST_9 # host-python-numpy
 	select BR2_PACKAGE_BOOST_PYTHON
 	select BR2_PACKAGE_PYTHON_NUMPY # runtime
 	select BR2_PACKAGE_PYTHON_PYBIND
 	select BR2_PACKAGE_PYTHON_SIX # runtime
+        select BR2_PACKAGE_PYTHON_PYBIND
 	help
 	  Enable python component
 
-comment "python support needs a glibc or musl toolchain w/ host gcc >= 9"
-	depends on !BR2_HOST_GCC_AT_LEAST_9 || \
-		!(BR2_TOOLCHAIN_USES_GLIBC || BR2_TOOLCHAIN_USES_MUSL)
-
-config BR2_PACKAGE_GNURADIO_SOAPY
-	bool "gr-soapy support"
-	select BR2_PACKAGE_SOAPY_SDR
-	help
-	  Soapy SDR support
+comment "python support needs glibc or musl"
+	depends on !(BR2_TOOLCHAIN_USES_GLIBC || BR2_TOOLCHAIN_USES_MUSL)
 
 config BR2_PACKAGE_GNURADIO_UTILS
 	bool "gr-utils support"
@@ -142,13 +135,6 @@ config BR2_PACKAGE_GNURADIO_FILTER
 	select BR2_PACKAGE_GNURADIO_FFT
 	help
 	  Filter signal processing blocks
-
-config BR2_PACKAGE_GNURADIO_IIO
-	bool "gr-iio support"
-	select BR2_PACKAGE_LIBIIO
-	select BR2_PACKAGE_GNURADIO_BLOCKS
-	help
-	  IIO support
 
 config BR2_PACKAGE_GNURADIO_NETWORK
 	bool "gr-network support"

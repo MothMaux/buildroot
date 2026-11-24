@@ -1,8 +1,8 @@
 [Unit]
 Description=Start psplash-systemd progress communication helper
 DefaultDependencies=no
-After=psplash-start.service
-BindsTo=psplash-start.service
+After=systemd-start.service
+Requires=psplash-start.service
 RequiresMountsFor=/run
 
 [Service]

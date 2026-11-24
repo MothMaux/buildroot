@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-COG_VERSION = 0.18.5
+COG_VERSION = 0.16.1
 COG_SITE = https://wpewebkit.org/releases
 COG_SOURCE = cog-$(COG_VERSION).tar.xz
 COG_INSTALL_STAGING = YES
@@ -15,7 +15,7 @@ COG_CONF_OPTS = \
 	-Ddocumentation=false \
 	-Dmanpages=false \
 	-Dprograms=true \
-	-Dwpe_api=2.0 \
+	-Dsoup2=enabled \
 	-Dcog_home_uri='$(call qstrip,$(BR2_PACKAGE_COG_PROGRAMS_HOME_URI))' \
 	-Dplatforms='$(subst $(space),$(comma),$(strip $(COG_PLATFORMS_LIST)))'
 
@@ -45,10 +45,7 @@ COG_CONF_OPTS += -Dcog_dbus_control=user
 endif
 
 ifeq ($(BR2_PACKAGE_LIBMANETTE),y)
-COG_CONF_OPTS += -Dlibmanette=enabled
 COG_DEPENDENCIES += libmanette
-else
-COG_CONF_OPTS += -Dlibmanette=disabled
 endif
 
 $(eval $(meson-package))

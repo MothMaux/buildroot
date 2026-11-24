@@ -4,13 +4,12 @@
 #
 ################################################################################
 
-NFTABLES_VERSION = 1.1.4
+NFTABLES_VERSION = 1.0.7
 NFTABLES_SOURCE = nftables-$(NFTABLES_VERSION).tar.xz
 NFTABLES_SITE = https://www.netfilter.org/projects/nftables/files
 NFTABLES_DEPENDENCIES = libmnl libnftnl host-pkgconf $(TARGET_NLS_DEPENDENCIES)
 NFTABLES_LICENSE = GPL-2.0
 NFTABLES_LICENSE_FILES = COPYING
-NFTABLES_INSTALL_STAGING = YES
 NFTABLES_SELINUX_MODULES = iptables
 
 # Python bindings are handled by package nftables-python
@@ -42,7 +41,7 @@ else
 NFTABLES_CONF_OPTS += --without-cli
 endif
 
-ifeq ($(BR2_PACKAGE_NFTABLES_JSON),y)
+ifeq ($(BR2_PACKAGE_JANSSON),y)
 NFTABLES_DEPENDENCIES += jansson
 NFTABLES_CONF_OPTS += --with-json
 else
@@ -55,11 +54,6 @@ define NFTABLES_LINUX_CONFIG_FIXUPS
 	$(call KCONFIG_ENABLE_OPT,CONFIG_NETFILTER)
 	$(call KCONFIG_ENABLE_OPT,CONFIG_NF_TABLES)
 	$(call KCONFIG_ENABLE_OPT,CONFIG_NF_TABLES_INET)
-endef
-
-define NFTABLES_INSTALL_INIT_SYSV
-	$(INSTALL) -m 0755 -D package/nftables/S35nftables \
-		$(TARGET_DIR)/etc/init.d/S35nftables
 endef
 
 $(eval $(autotools-package))

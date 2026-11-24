@@ -1,7 +1,5 @@
 # Locally calculated after checking pgp signature
-# using key: D8FF44A79CC8A61EF694FA7EB883E01314DA8E84
-# from: https://codeberg.org/a-j-wood.gpg
-sha256  aa1630c79af6960a8922ffa64d2c3e7f87486da21fcb57e277824294fd266742  pv-1.10.3.tar.gz
+sha256  e831951eff0718fba9b1ef286128773b9d0e723e1fbfae88d5a3188814fdc603  pv-1.6.20.tar.bz2
 
 # Hash for license file
-sha256  3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986  docs/COPYING
+sha256  280e182171df3e9bb4a9b407326e88521151fcb8f4f8557255f26177d5900ccf  doc/COPYING

@@ -4,8 +4,7 @@
 #
 ################################################################################
 
-# When updating the version, please also update opencv4-contrib
-OPENCV4_VERSION = 4.13.0
+OPENCV4_VERSION = 4.6.0
 OPENCV4_SITE = $(call github,opencv,opencv,$(OPENCV4_VERSION))
 OPENCV4_INSTALL_STAGING = YES
 OPENCV4_LICENSE = Apache-2.0
@@ -204,14 +203,15 @@ OPENCV4_CONF_OPTS += \
 	-DINSTALL_PYTHON_EXAMPLES=OFF \
 	-DINSTALL_TO_MANGLED_PATHS=OFF
 
-# Disabled features (mostly because they are not available in Buildroot)
+# Disabled features (mostly because they are not available in Buildroot), but
+# - eigen: OpenCV does not use it, not take any benefit from it.
 OPENCV4_CONF_OPTS += \
 	-DWITH_1394=OFF \
 	-DWITH_CLP=OFF \
+	-DWITH_EIGEN=OFF \
 	-DWITH_GDAL=OFF \
 	-DWITH_GPHOTO2=OFF \
 	-DWITH_GSTREAMER_0_10=OFF \
-	-DWITH_GTK_2_X=OFF \
 	-DWITH_LAPACK=OFF \
 	-DWITH_MATLAB=OFF \
 	-DWITH_OPENCL=OFF \
@@ -284,11 +284,6 @@ OPENCV4_CONF_OPTS += \
 	-DBUILD_opencv_xphoto=$(if $(BR2_PACKAGE_OPENCV4_CONTRIB_LIB_XPHOTO),ON,OFF)
 endif
 
-ifeq ($(BR2_PACKAGE_OPENCV4_CONTRIB_LIB_SFM),y)
-OPENCV4_DEPENDENCIES += eigen glog gflags
-OPENCV4_CONF_OPTS += -DWITH_EIGEN=ON
-endif
-
 ifeq ($(BR2_PACKAGE_OPENCV4_JPEG2000_WITH_JASPER),y)
 OPENCV4_CONF_OPTS += -DWITH_JASPER=ON
 OPENCV4_DEPENDENCIES += jasper
@@ -317,11 +312,18 @@ else
 OPENCV4_CONF_OPTS += -DWITH_GSTREAMER=OFF
 endif
 
+ifeq ($(BR2_PACKAGE_OPENCV4_WITH_GTK)$(BR2_PACKAGE_OPENCV4_WITH_GTK3),)
+OPENCV4_CONF_OPTS += -DWITH_GTK=OFF -DWITH_GTK_2_X=OFF
+endif
+
+ifeq ($(BR2_PACKAGE_OPENCV4_WITH_GTK),y)
+OPENCV4_CONF_OPTS += -DWITH_GTK=ON -DWITH_GTK_2_X=ON
+OPENCV4_DEPENDENCIES += libgtk2
+endif
+
 ifeq ($(BR2_PACKAGE_OPENCV4_WITH_GTK3),y)
-OPENCV4_CONF_OPTS += -DWITH_GTK=ON
+OPENCV4_CONF_OPTS += -DWITH_GTK=ON -DWITH_GTK_2_X=OFF
 OPENCV4_DEPENDENCIES += libgtk3
-else
-OPENCV4_CONF_OPTS += -DWITH_GTK=OFF
 endif
 
 ifeq ($(BR2_PACKAGE_OPENCV4_WITH_JPEG),y)
@@ -400,12 +402,12 @@ OPENCV4_CONF_OPTS += \
 	-DPYTHON3_EXECUTABLE=$(HOST_DIR)/bin/python3 \
 	-DPYTHON3_INCLUDE_PATH=$(STAGING_DIR)/usr/include/python$(PYTHON3_VERSION_MAJOR) \
 	-DPYTHON3_LIBRARIES=$(STAGING_DIR)/usr/lib/libpython$(PYTHON3_VERSION_MAJOR).so \
-	-DPYTHON3_NUMPY_INCLUDE_DIRS=$(STAGING_DIR)/usr/lib/python$(PYTHON3_VERSION_MAJOR)/site-packages/numpy/_core/include \
+	-DPYTHON3_NUMPY_INCLUDE_DIRS=$(STAGING_DIR)/usr/lib/python$(PYTHON3_VERSION_MAJOR)/site-packages/numpy/core/include \
 	-DPYTHON3_PACKAGES_PATH=/usr/lib/python$(PYTHON3_VERSION_MAJOR)/site-packages \
 	-DPYTHON3_NUMPY_VERSION=$(PYTHON_NUMPY_VERSION)
 OPENCV4_DEPENDENCIES += python3
 OPENCV4_KEEP_PY_FILES += usr/lib/python$(PYTHON3_VERSION_MAJOR)/site-packages/cv2/config*.py
-OPENCV4_CONF_ENV += $(PKG_PYTHON_SETUPTOOLS_ENV)
+OPENCV4_CONF_ENV += $(PKG_PYTHON_DISTUTILS_ENV)
 OPENCV4_DEPENDENCIES += python-numpy
 else
 OPENCV4_CONF_OPTS += \

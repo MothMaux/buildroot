@@ -4,9 +4,9 @@
 #
 ################################################################################
 
-PYTHON_MATPLOTLIB_VERSION = 3.10.8
+PYTHON_MATPLOTLIB_VERSION = 3.4.3
 PYTHON_MATPLOTLIB_SOURCE = matplotlib-$(PYTHON_MATPLOTLIB_VERSION).tar.gz
-PYTHON_MATPLOTLIB_SITE = https://files.pythonhosted.org/packages/8a/76/d3c6e3a13fe484ebe7718d14e269c9569c4eb0020a968a327acb3b9a8fe6
+PYTHON_MATPLOTLIB_SITE = https://files.pythonhosted.org/packages/21/37/197e68df384ff694f78d687a49ad39f96c67b8d75718bc61503e1676b617
 PYTHON_MATPLOTLIB_LICENSE = Python-2.0
 PYTHON_MATPLOTLIB_LICENSE_FILES = LICENSE/LICENSE
 PYTHON_MATPLOTLIB_DEPENDENCIES = \
@@ -14,21 +14,18 @@ PYTHON_MATPLOTLIB_DEPENDENCIES = \
 	host-pkgconf \
 	host-python-certifi \
 	host-python-numpy \
-	host-python-setuptools-scm \
 	libpng \
 	python-cycler \
-	python-pybind \
 	qhull
-PYTHON_MATPLOTLIB_CONF_OPTS = \
-	-Dmacosx=false \
-	-Dsystem-freetype=true \
-	-Dsystem-qhull=true
-PYTHON_MATPLOTLIB_CONF_ENV += \
-	_PYTHON_SYSCONFIGDATA_NAME=$(PKG_PYTHON_SYSCONFIGDATA_NAME) \
-	PYTHONPATH=$(PYTHON3_PATH)
+PYTHON_MATPLOTLIB_SETUP_TYPE = setuptools
 
 ifeq ($(BR2_PACKAGE_PYTHON_MATPLOTLIB_QT),y)
 PYTHON_MATPLOTLIB_DEPENDENCIES += python-pyqt5
 endif
 
-$(eval $(meson-package))
+define PYTHON_MATPLOTLIB_COPY_SETUP_CFG
+	cp $(PYTHON_MATPLOTLIB_PKGDIR)/setup.cfg $(@D)/setup.cfg
+endef
+PYTHON_MATPLOTLIB_PRE_CONFIGURE_HOOKS += PYTHON_MATPLOTLIB_COPY_SETUP_CFG
+
+$(eval $(python-package))

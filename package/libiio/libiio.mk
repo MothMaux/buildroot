@@ -4,8 +4,14 @@
 #
 ################################################################################
 
-LIBIIO_VERSION = da72b6193911e8fc242422bea5bef90e23c3577d
-LIBIIO_SITE = $(call github,analogdevicesinc,libiio,$(LIBIIO_VERSION))
+
+LIBIIO_VERSION = 0.26
+LIBIIO_SITE = $(call github,analogdevicesinc,libiio,v$(LIBIIO_VERSION))
+
+#LIBIIO_VERSION = 38483f31be391af66b35542f733e569febe13d3a
+#LIBIIO_SITE = https://github.com/analogdevicesinc/libiio.git
+#LIBIIO_SITE_METHOD = git
+
 LIBIIO_INSTALL_STAGING = YES
 LIBIIO_LICENSE = LGPL-2.1+
 LIBIIO_LICENSE_FILES = COPYING.txt
@@ -44,6 +50,7 @@ LIBIIO_CONF_OPTS += -DWITH_SERIAL_BACKEND=ON
 else
 LIBIIO_CONF_OPTS += -DWITH_SERIAL_BACKEND=OFF
 endif
+
 ifeq ($(BR2_PACKAGE_LIBIIO_HWMON_SUPPORT),y)
 LIBIIO_CONF_OPTS += -DWITH_HWMON=ON
 else
@@ -51,8 +58,8 @@ LIBIIO_CONF_OPTS += -DWITH_HWMON=OFF
 endif
 
 ifeq ($(BR2_PACKAGE_LIBIIO_IIOD),y)
-LIBIIO_DEPENDENCIES += host-flex host-bison
-LIBIIO_CONF_OPTS += -DWITH_IIOD=ON
+LIBIIO_DEPENDENCIES += host-flex host-bison libaio
+LIBIIO_CONF_OPTS += -DWITH_IIOD=ON -DWITH_AIO=ON
 else
 LIBIIO_CONF_OPTS += -DWITH_IIOD=OFF
 endif
@@ -106,8 +113,8 @@ endif
 
 ifeq ($(BR2_PACKAGE_LIBIIO_IIOD),y)
 define LIBIIO_INSTALL_INIT_SYSV
-	$(INSTALL) -D -m 0755 package/libiio/S60iiod \
-		$(TARGET_DIR)/etc/init.d/S60iiod
+	$(INSTALL) -D -m 0755 package/libiio/S99iiod \
+		$(TARGET_DIR)/etc/init.d/S99iiod
 endef
 endif
 

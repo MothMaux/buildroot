@@ -5,4 +5,4 @@ config BR2_PACKAGE_NFACCT
 	  nfacct is the command line tool to create/retrieve/delete
 	  netfilter accounting objects.
 
-	  https://www.netfilter.org/projects/nfacct/
+	  http://www.netfilter.org/projects/nfacct/
